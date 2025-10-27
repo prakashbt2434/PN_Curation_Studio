@@ -21,7 +21,7 @@ export const SecretKeyModal: React.FC<SecretKeyModalProps> = ({ onSubmit }) => {
           Enter Your Secret Key
         </h2>
         <p className="text-center text-gray-500 mb-6">
-          To use the Curating Studio, please provide your Secret Key.
+          To use the Curation Studio, please provide your Secret Key.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">

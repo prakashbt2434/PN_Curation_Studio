@@ -26,7 +26,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     <div className="min-h-screen bg-gradient-to-br from-teal-50 to-green-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
         <h1 className="text-3xl font-bold text-center text-teal-600 mb-2">
-          PublicNext Curating Studio
+          PublicNext Curation Studio
         </h1>
         <p className="text-center text-gray-500 mb-8">Please sign in to continue</p>
 
