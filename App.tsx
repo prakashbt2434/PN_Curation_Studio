@@ -6,13 +6,11 @@ import { OutputDisplay } from './components/OutputDisplay';
 import { RewrittenTextDisplay } from './components/RewrittenTextDisplay';
 import { HeadlineDisplay } from './components/HeadlineDisplay';
 import { LoginPage } from './components/LoginPage';
-import { SecretKeyModal } from './components/ApiKeyModal';
 import { correctKannadaSpelling, rewriteKannadaText, generateKannadaHeadline } from './services/geminiService';
 import type { CorrectionResponse } from './types';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [isSecretKeySet, setIsSecretKeySet] = useState<boolean>(!!localStorage.getItem('gemini-secret-key'));
   
   const [inputText, setInputText] = useState<string>('');
   
@@ -80,27 +78,13 @@ const App: React.FC = () => {
     setIsAuthenticated(true);
   };
 
-  const handleSecretKeySubmit = (secretKey: string) => {
-    localStorage.setItem('gemini-secret-key', secretKey);
-    setIsSecretKeySet(true);
-  };
-
-  const handleClearSecretKey = () => {
-    localStorage.removeItem('gemini-secret-key');
-    setIsSecretKeySet(false);
-  };
-
   if (!isAuthenticated) {
     return <LoginPage onLoginSuccess={handleLoginSuccess} />;
   }
 
-  if (!isSecretKeySet) {
-    return <SecretKeyModal onSubmit={handleSecretKeySubmit} />;
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 to-green-50 text-gray-800">
-      <Header onClearSecretKey={handleClearSecretKey} />
+      <Header />
       <main className="container mx-auto p-4 md:p-8">
         <div className="max-w-screen-xl mx-auto bg-white/60 backdrop-blur-sm rounded-2xl shadow-lg p-6 md:p-10 border border-gray-200">
           <p className="text-center text-gray-600 mb-8 text-base md:text-lg max-w-4xl mx-auto">

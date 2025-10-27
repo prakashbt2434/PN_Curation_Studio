@@ -2,14 +2,14 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import type { CorrectionResponse } from '../types';
 
-function getAiClient(): GoogleGenAI {
-  const apiKey = localStorage.getItem('gemini-secret-key');
-  if (!apiKey) {
-    // This error will be caught by the calling function and displayed to the user.
-    throw new Error("Secret Key not found. Please set your Secret Key to continue.");
-  }
-  return new GoogleGenAI({ apiKey });
+// Initialize the GoogleGenAI client once using the environment variable.
+// This is more secure and performant than reading from localStorage on each call.
+const apiKey = process.env.API_KEY;
+if (!apiKey) {
+  // This error will be helpful for developers if the environment variable is not set.
+  throw new Error("API_KEY environment variable not set. Please configure it in your deployment settings.");
 }
+const ai = new GoogleGenAI({ apiKey });
 
 
 const correctionResponseSchema = {
@@ -70,7 +70,6 @@ export const correctKannadaSpelling = async (text: string): Promise<CorrectionRe
   `;
 
   try {
-    const ai = getAiClient();
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: prompt,
@@ -86,7 +85,7 @@ export const correctKannadaSpelling = async (text: string): Promise<CorrectionRe
     return parsedResponse;
   } catch (error) {
     console.error("Error calling Gemini API for spell correction:", error);
-    throw new Error("Failed to process the text with the Gemini API. Check your Secret Key and try again.");
+    throw new Error("Failed to process the text. This could be due to a configuration issue or a temporary API problem.");
   }
 };
 
@@ -106,7 +105,6 @@ export const rewriteKannadaText = async (text: string): Promise<string> => {
   `;
 
   try {
-    const ai = getAiClient();
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: prompt,
@@ -136,7 +134,6 @@ export const generateKannadaHeadline = async (text: string): Promise<string[]> =
   `;
 
   try {
-    const ai = getAiClient();
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: prompt,
@@ -166,7 +163,6 @@ export const generateKannadaHeadline = async (text: string): Promise<string[]> =
 // FIX: Add and export generateKannadaVoiceoverAudio function to fix the error in VoiceoverDisplay.tsx.
 export const generateKannadaVoiceoverAudio = async (text: string): Promise<string> => {
   try {
-    const ai = getAiClient();
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
       contents: [{ parts: [{ text }] }],
