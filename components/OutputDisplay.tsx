@@ -54,17 +54,29 @@ export const OutputDisplay: React.FC<OutputDisplayProps> = ({ correctionData, is
       return <p>{correctedText}</p>;
     }
     
-    // Create a map of corrected words for quick lookup
-    const correctionMap = new Map<string, string>();
-    corrections.forEach(c => correctionMap.set(c.corrected, c.original));
+    // Create a map where keys are corrected words and values are a queue of their original forms.
+    // This ensures we only highlight the exact number of words that were corrected,
+    // and helps provide the correct original word in the tooltip.
+    const originalWordsQueue = new Map<string, string[]>();
+    corrections.forEach(c => {
+        const originals = originalWordsQueue.get(c.corrected) || [];
+        originals.push(c.original);
+        originalWordsQueue.set(c.corrected, originals);
+    });
 
     // A simple regex to split text by spaces and punctuation, keeping the delimiters
     const wordsAndDelimiters = correctedText.split(/(\s+|[.,!?;:])/).filter(Boolean);
 
     return wordsAndDelimiters.map((part, index) => {
-      if (correctionMap.has(part)) {
+      const originals = originalWordsQueue.get(part);
+
+      // If there's a queue of original words for this corrected part, and the queue is not empty...
+      if (originals && originals.length > 0) {
+        // Take the next original word from the front of the queue for the tooltip.
+        const originalWord = originals.shift(); 
+        
         return (
-          <span key={index} className="bg-yellow-200 text-yellow-900 rounded-md px-1 py-0.5 font-medium cursor-pointer" title={`Original: ${correctionMap.get(part)}`}>
+          <span key={index} className="bg-yellow-200 text-yellow-900 rounded-md px-1 py-0.5 font-medium cursor-pointer" title={`Original: ${originalWord}`}>
             {part}
           </span>
         );

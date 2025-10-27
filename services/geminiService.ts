@@ -46,7 +46,7 @@ const headlineResponseSchema = {
     properties: {
         headlines: {
             type: Type.ARRAY,
-            description: 'An array of three headline strings.',
+            description: 'An array of exactly three non-empty headline strings.',
             items: {
                 type: Type.STRING
             }
@@ -124,10 +124,10 @@ export const rewriteKannadaText = async (text: string): Promise<string> => {
 
 export const generateKannadaHeadline = async (text: string): Promise<string[]> => {
   const prompt = `
-    You are an expert Kannada news editor. Your task is to create three compelling and concise headlines for the following news article content.
-    The headlines should be both engaging to spark curiosity and have an emotional connection with the reader.
+    You are an expert Kannada news editor. Your task is to create exactly three compelling and concise headlines for the following news article content.
+    The headlines should be both engaging to spark curiosity and have an emotional connection with the reader. Each headline must be a non-empty string. Do not start headlines with punctuation like colons.
 
-    Return the result as a JSON object with a single key "headlines" containing an array of the three headline strings.
+    Return the result as a JSON object with a single key "headlines" containing an array of exactly three headline strings.
 
     News Content:
     ---
@@ -149,7 +149,14 @@ export const generateKannadaHeadline = async (text: string): Promise<string[]> =
 
     const jsonText = response.text.trim();
     const parsedResponse: { headlines: string[] } = JSON.parse(jsonText);
-    return parsedResponse.headlines.map(h => h.replace(/"/g, ''));
+    
+    // Clean, filter, and limit the headlines
+    const cleanedHeadlines = parsedResponse.headlines
+      .map(h => h.replace(/"/g, '').trim()) // Trim whitespace and remove quotes
+      .map(h => h.replace(/^[:\s]+/, ''))    // Remove leading colons and whitespace
+      .filter(h => h.length > 0);            // Filter out any empty strings after cleaning
+
+    return cleanedHeadlines.slice(0, 3); // Ensure we only return a maximum of 3 headlines
   } catch (error) {
     console.error("Error calling Gemini API for headline generation:", error);
     throw new Error("Failed to generate headlines with the Gemini API.");
