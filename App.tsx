@@ -131,12 +131,12 @@ const App: React.FC = () => {
 
             {/* Column 2: Outputs */}
             <div className="flex flex-col space-y-6">
-                <div className="flex flex-col space-y-4">
-                    <h2 className="text-xl font-semibold text-emerald-700">Corrected Text</h2>
-                    <OutputDisplay
-                        correctionData={correctionData}
-                        isLoading={isLoading && !correctionData}
-                        error={error}
+                 <div className="flex flex-col space-y-4">
+                    <h2 className="text-xl font-semibold text-cyan-700">Suggested Headlines</h2>
+                    <HeadlineDisplay
+                        headlines={headlines}
+                        isLoading={isLoading && !!rewrittenText && !headlines}
+                        error={headlineError}
                     />
                 </div>
                  <div className="flex flex-col space-y-4">
@@ -147,12 +147,12 @@ const App: React.FC = () => {
                         error={rewriteError}
                     />
                 </div>
-                 <div className="flex flex-col space-y-4">
-                    <h2 className="text-xl font-semibold text-cyan-700">Suggested Headlines</h2>
-                    <HeadlineDisplay
-                        headlines={headlines}
-                        isLoading={isLoading && !!rewrittenText && !headlines}
-                        error={headlineError}
+                <div className="flex flex-col space-y-4">
+                    <h2 className="text-xl font-semibold text-emerald-700">Corrected Text</h2>
+                    <OutputDisplay
+                        correctionData={correctionData}
+                        isLoading={isLoading && !correctionData}
+                        error={error}
                     />
                 </div>
             </div>

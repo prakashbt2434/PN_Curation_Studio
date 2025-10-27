@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import type { CorrectionResponse } from '../types';
 
 interface OutputDisplayProps {
@@ -19,7 +19,33 @@ const LoadingSkeleton: React.FC = () => (
   </div>
 );
 
+const CopyIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+    </svg>
+);
+
+const CheckIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+    </svg>
+);
+
 export const OutputDisplay: React.FC<OutputDisplayProps> = ({ correctionData, isLoading, error }) => {
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleCopy = () => {
+    if (correctionData?.correctedText) {
+      navigator.clipboard.writeText(correctionData.correctedText).then(() => {
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+      }).catch(err => {
+        console.error('Failed to copy text: ', err);
+        alert('Failed to copy corrected text.');
+      });
+    }
+  };
+
   const renderHighlightedText = () => {
     if (!correctionData) return null;
 
@@ -49,6 +75,20 @@ export const OutputDisplay: React.FC<OutputDisplayProps> = ({ correctionData, is
 
   return (
     <div className="w-full h-56 p-4 border border-gray-300 rounded-xl shadow-sm bg-emerald-50/50 relative overflow-y-auto">
+      {correctionData && !isLoading && (
+         <button
+            onClick={handleCopy}
+            className={`absolute top-2 right-2 p-2 rounded-lg transition-all duration-200 ${
+              isCopied
+                ? 'bg-green-500 text-white'
+                : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+            }`}
+            aria-label={isCopied ? 'Copied' : 'Copy corrected text'}
+            title={isCopied ? 'Copied!' : 'Copy'}
+          >
+            {isCopied ? <CheckIcon /> : <CopyIcon />}
+        </button>
+      )}
       {isLoading && <LoadingSkeleton />}
       {!isLoading && !error && !correctionData && (
         <div className="flex items-center justify-center h-full">
@@ -61,7 +101,7 @@ export const OutputDisplay: React.FC<OutputDisplayProps> = ({ correctionData, is
         </div>
       )}
       {!isLoading && correctionData && (
-        <div className="text-lg leading-relaxed">
+        <div className="text-lg leading-relaxed pr-8">
           {correctionData.corrections.length > 0 ? (
              <div className="mb-4 p-3 bg-green-100 border-l-4 border-green-500 text-green-800 rounded-r-lg">
                 <p className="font-semibold">Corrections Made: {correctionData.corrections.length}</p>
