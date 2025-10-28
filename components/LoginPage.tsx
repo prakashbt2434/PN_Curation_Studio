@@ -86,8 +86,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             </button>
           </div>
         </form>
-         <footer className="text-center mt-8">
+         <footer className="text-center mt-8 space-y-1">
           <p className="text-gray-500 text-sm">© 2025. PublicNext</p>
+          <p className="text-gray-500 text-xs">Version 1.0.0</p>
         </footer>
       </div>
     </div>
