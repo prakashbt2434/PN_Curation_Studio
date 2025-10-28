@@ -5,10 +5,11 @@ import { SubmitButton } from './components/SubmitButton';
 import { OutputDisplay } from './components/OutputDisplay';
 import { RewrittenTextDisplay } from './components/RewrittenTextDisplay';
 import { HeadlineDisplay } from './components/HeadlineDisplay';
+import { KeywordDisplay } from './components/KeywordDisplay';
 import { LoginPage } from './components/LoginPage';
 import { SecretKeyModal } from './components/ApiKeyModal';
-import { correctKannadaSpelling, rewriteKannadaText, generateKannadaHeadline } from './services/geminiService';
-import type { CorrectionResponse } from './types';
+import { correctKannadaSpelling, rewriteKannadaText, generateKannadaHeadline, generateKeywords } from './services/geminiService';
+import type { CorrectionResponse, KeywordsResponse } from './types';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -19,20 +20,24 @@ const App: React.FC = () => {
   const [correctionData, setCorrectionData] = useState<CorrectionResponse | null>(null);
   const [rewrittenText, setRewrittenText] = useState<string | null>(null);
   const [headlines, setHeadlines] = useState<string[] | null>(null);
+  const [keywords, setKeywords] = useState<KeywordsResponse | null>(null);
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [error, setError] = useState<string | null>(null);
   const [rewriteError, setRewriteError] = useState<string | null>(null);
   const [headlineError, setHeadlineError] = useState<string | null>(null);
+  const [keywordsError, setKeywordsError] = useState<string | null>(null);
 
   const resetOutputs = () => {
     setCorrectionData(null);
     setRewrittenText(null);
     setHeadlines(null);
+    setKeywords(null);
     setError(null);
     setRewriteError(null);
     setHeadlineError(null);
+    setKeywordsError(null);
   };
 
   const handleSubmit = useCallback(async () => {
@@ -52,12 +57,24 @@ const App: React.FC = () => {
         setRewrittenText(rewrittenResult);
 
         if (rewrittenResult) {
-            try {
-                const headlineResult = await generateKannadaHeadline(rewrittenResult);
-                setHeadlines(headlineResult);
-            } catch (err) {
+            // Generate headlines and keywords in parallel
+            const [headlineOutcome, keywordOutcome] = await Promise.allSettled([
+                generateKannadaHeadline(rewrittenResult),
+                generateKeywords(rewrittenResult),
+            ]);
+
+            if (headlineOutcome.status === 'fulfilled') {
+                setHeadlines(headlineOutcome.value);
+            } else {
                 setHeadlineError('Failed to generate headlines.');
-                console.error(err);
+                console.error(headlineOutcome.reason);
+            }
+
+            if (keywordOutcome.status === 'fulfilled') {
+                setKeywords(keywordOutcome.value);
+            } else {
+                setKeywordsError('Failed to generate keywords.');
+                console.error(keywordOutcome.reason);
             }
         }
       }
@@ -145,6 +162,14 @@ const App: React.FC = () => {
                         rewrittenText={rewrittenText}
                         isLoading={isLoading && !!correctionData && !rewrittenText}
                         error={rewriteError}
+                    />
+                </div>
+                 <div className="flex flex-col space-y-4">
+                    <h2 className="text-xl font-semibold text-indigo-700">SEO Keywords</h2>
+                    <KeywordDisplay
+                        keywords={keywords}
+                        isLoading={isLoading && !!rewrittenText && !keywords}
+                        error={keywordsError}
                     />
                 </div>
                 <div className="flex flex-col space-y-4">

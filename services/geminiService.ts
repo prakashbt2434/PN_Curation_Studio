@@ -1,6 +1,7 @@
+
 // FIX: Import Modality for use in text-to-speech generation.
 import { GoogleGenAI, Type, Modality } from "@google/genai";
-import type { CorrectionResponse } from '../types';
+import type { CorrectionResponse, KeywordsResponse } from '../types';
 
 function getAiClient(): GoogleGenAI {
   const apiKey = localStorage.getItem('gemini-secret-key');
@@ -53,6 +54,23 @@ const headlineResponseSchema = {
         }
     },
     required: ['headlines'],
+};
+
+const keywordsResponseSchema = {
+    type: Type.OBJECT,
+    properties: {
+        shortTailKeywords: {
+            type: Type.ARRAY,
+            description: 'A dynamic array of short-tail keywords in English. This includes all identified locations from the text plus 4 additional non-location keywords.',
+            items: { type: Type.STRING }
+        },
+        longTailKeywords: {
+            type: Type.ARRAY,
+            description: 'An array of exactly 5 long-tail keywords in English.',
+            items: { type: Type.STRING }
+        }
+    },
+    required: ['shortTailKeywords', 'longTailKeywords'],
 };
 
 
@@ -162,6 +180,53 @@ export const generateKannadaHeadline = async (text: string): Promise<string[]> =
     throw new Error("Failed to generate headlines with the Gemini API.");
   }
 };
+
+export const generateKeywords = async (text: string): Promise<KeywordsResponse> => {
+  const prompt = `
+    You are a Search Engine Optimization (SEO) expert specializing in Kannada news content for Google Search and Google Discovery.
+    Based on the following Kannada news article content, generate keywords that will help it rank high.
+
+    IMPORTANT: The generated keywords MUST be in English.
+
+    Your task is to generate short-tail and long-tail keywords according to these rules:
+
+    1.  **Short-tail Keywords:**
+        - First, identify ALL unique place names (cities, towns, specific locations) mentioned in the Kannada text. Convert each place name to its standard English spelling and add it to the list of short-tail keywords.
+        - Second, generate exactly 4 additional, highly relevant, non-location-based short-tail keywords. These should be 1-2 words long and could include names of people, event types, or key topics.
+        - The final list of short-tail keywords will be a combination of all identified place names and the 4 additional keywords. The total number will be dynamic.
+
+    2.  **Long-tail Keywords:**
+        - Generate exactly 5 long-tail keywords. These should be 3+ words long, forming more specific search phrases relevant to the article.
+
+    Return the result as a JSON object with two keys: "shortTailKeywords" and "longTailKeywords".
+
+    News Content (in Kannada):
+    ---
+    ${text}
+    ---
+  `;
+
+  try {
+    const ai = getAiClient();
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: keywordsResponseSchema,
+        temperature: 0.6,
+      },
+    });
+
+    const jsonText = response.text.trim();
+    const parsedResponse: KeywordsResponse = JSON.parse(jsonText);
+    return parsedResponse;
+  } catch (error) {
+    console.error("Error calling Gemini API for keyword generation:", error);
+    throw new Error("Failed to generate keywords with the Gemini API.");
+  }
+};
+
 
 // FIX: Add and export generateKannadaVoiceoverAudio function to fix the error in VoiceoverDisplay.tsx.
 export const generateKannadaVoiceoverAudio = async (text: string): Promise<string> => {
