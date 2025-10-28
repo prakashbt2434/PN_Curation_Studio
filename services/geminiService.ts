@@ -77,6 +77,7 @@ const keywordsResponseSchema = {
 export const correctKannadaSpelling = async (text: string): Promise<CorrectionResponse> => {
   const prompt = `
     You are an expert in the Kannada language. Your task is to identify and correct spelling mistakes in the given Kannada text. 
+    Crucially, you must preserve the original paragraph structure and line breaks. Do not merge paragraphs or remove empty lines.
     Do not change the meaning or grammar of the sentences. Only correct clear spelling errors.
     Return the fully corrected text and a list of the specific corrections you made.
     If there are no spelling mistakes, return the original text and an empty corrections array.
