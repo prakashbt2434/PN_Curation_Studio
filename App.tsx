@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { Header } from './components/Header';
 import { InputTextArea } from './components/InputTextArea';
@@ -198,7 +199,7 @@ const App: React.FC = () => {
         </div>
         <footer className="text-center mt-8 space-y-1">
           <p className="text-gray-500 text-sm">© 2025. PublicNext</p>
-          <p className="text-gray-500 text-xs">Version 1.0.0</p>
+          <p className="text-gray-500 text-xs">Version 1.0.1</p>
         </footer>
       </main>
     </div>

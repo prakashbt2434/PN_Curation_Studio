@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 
 interface LoginPageProps {
@@ -14,7 +15,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === HARDCODED_USERNAME && password === HARDCODED_PASSWORD) {
+    if (username.trim() === HARDCODED_USERNAME && password.trim() === HARDCODED_PASSWORD) {
       setError(null);
       onLoginSuccess();
     } else {
@@ -88,7 +89,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         </form>
          <footer className="text-center mt-8 space-y-1">
           <p className="text-gray-500 text-sm">© 2025. PublicNext</p>
-          <p className="text-gray-500 text-xs">Version 1.0.0</p>
+          <p className="text-gray-500 text-xs">Version 1.0.1</p>
         </footer>
       </div>
     </div>
