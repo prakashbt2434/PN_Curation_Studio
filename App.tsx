@@ -2,6 +2,7 @@
 import React, { useState, useCallback } from 'react';
 import { Header } from './components/Header';
 import { InputTextArea } from './components/InputTextArea';
+import { InputText } from './components/InputText';
 import { SubmitButton } from './components/SubmitButton';
 import { OutputDisplay } from './components/OutputDisplay';
 import { RewrittenTextDisplay } from './components/RewrittenTextDisplay';
@@ -16,81 +17,105 @@ const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isSecretKeySet, setIsSecretKeySet] = useState<boolean>(!!localStorage.getItem('gemini-secret-key'));
   
-  const [inputText, setInputText] = useState<string>('');
+  const [originalHeadline, setOriginalHeadline] = useState<string>('');
+  const [inputBody, setInputBody] = useState<string>('');
   
-  const [correctionData, setCorrectionData] = useState<CorrectionResponse | null>(null);
+  const [correctedHeadlineData, setCorrectedHeadlineData] = useState<CorrectionResponse | null>(null);
+  const [correctedBodyData, setCorrectedBodyData] = useState<CorrectionResponse | null>(null);
   const [rewrittenText, setRewrittenText] = useState<string | null>(null);
   const [headlines, setHeadlines] = useState<string[] | null>(null);
   const [keywords, setKeywords] = useState<KeywordsResponse | null>(null);
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const [error, setError] = useState<string | null>(null);
+  const [correctedHeadlineError, setCorrectedHeadlineError] = useState<string | null>(null);
+  const [correctedBodyError, setCorrectedBodyError] = useState<string | null>(null);
   const [rewriteError, setRewriteError] = useState<string | null>(null);
   const [headlineError, setHeadlineError] = useState<string | null>(null);
   const [keywordsError, setKeywordsError] = useState<string | null>(null);
 
   const resetOutputs = () => {
-    setCorrectionData(null);
+    setCorrectedHeadlineData(null);
+    setCorrectedBodyData(null);
     setRewrittenText(null);
     setHeadlines(null);
     setKeywords(null);
-    setError(null);
+    setCorrectedHeadlineError(null);
+    setCorrectedBodyError(null);
     setRewriteError(null);
     setHeadlineError(null);
     setKeywordsError(null);
   };
 
   const handleSubmit = useCallback(async () => {
-    if (!inputText.trim()) {
-      setError('Please enter some Kannada text to process.');
+    if (!originalHeadline.trim() && !inputBody.trim()) {
       return;
     }
     setIsLoading(true);
     resetOutputs();
 
-    try {
-      const correctionResult = await correctKannadaSpelling(inputText);
-      setCorrectionData(correctionResult);
+    const tasks: Promise<any>[] = [];
 
-      if (correctionResult.correctedText) {
-        const rewrittenResult = await rewriteKannadaText(correctionResult.correctedText);
-        setRewrittenText(rewrittenResult);
+    // Task for processing the headline
+    if (originalHeadline.trim()) {
+      const headlineTask = correctKannadaSpelling(originalHeadline)
+        .then(setCorrectedHeadlineData)
+        .catch(err => {
+          console.error("Headline Correction Error:", err);
+          setCorrectedHeadlineError(err instanceof Error ? err.message : "Failed to correct headline.");
+        });
+      tasks.push(headlineTask);
+    }
 
-        if (rewrittenResult) {
-            // Generate headlines and keywords in parallel
-            const [headlineOutcome, keywordOutcome] = await Promise.allSettled([
+    // Task for processing the body and its dependent operations
+    if (inputBody.trim()) {
+      const bodyTask = (async () => {
+        try {
+          const correctionResult = await correctKannadaSpelling(inputBody);
+          setCorrectedBodyData(correctionResult);
+
+          if (correctionResult?.correctedText) {
+            const rewrittenResult = await rewriteKannadaText(correctionResult.correctedText);
+            setRewrittenText(rewrittenResult);
+
+            if (rewrittenResult) {
+              const [headlineOutcome, keywordOutcome] = await Promise.allSettled([
                 generateKannadaHeadline(rewrittenResult),
                 generateKeywords(rewrittenResult),
-            ]);
+              ]);
 
-            if (headlineOutcome.status === 'fulfilled') {
+              if (headlineOutcome.status === 'fulfilled') {
                 setHeadlines(headlineOutcome.value);
-            } else {
+              } else {
                 setHeadlineError('Failed to generate headlines.');
-                console.error(headlineOutcome.reason);
-            }
+                console.error("Headline Generation Error:", headlineOutcome.reason);
+              }
 
-            if (keywordOutcome.status === 'fulfilled') {
+              if (keywordOutcome.status === 'fulfilled') {
                 setKeywords(keywordOutcome.value);
-            } else {
+              } else {
                 setKeywordsError('Failed to generate keywords.');
-                console.error(keywordOutcome.reason);
+                console.error("Keyword Generation Error:", keywordOutcome.reason);
+              }
             }
+          }
+        } catch (err) {
+          console.error("Body Processing Error:", err);
+          setCorrectedBodyError(err instanceof Error ? err.message : "Failed to process body text.");
         }
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.';
-      setError(errorMessage);
-      console.error(err);
-    } finally {
-      setIsLoading(false);
+      })();
+      tasks.push(bodyTask);
     }
-  }, [inputText]);
+
+    await Promise.all(tasks);
+    setIsLoading(false);
+  }, [originalHeadline, inputBody]);
   
   const handleExample = () => {
-    const exampleText = "ಬೆಂಗಳೂರಿನಲ್ಲಿ ನಡೆದ ತಂತ್ರಜ್ಞಾನ ಶೃಂಗಸಭೆಯಲ್ಲಿ, ಪ್ರಖ್ಯಾತ ವಿಜ್ಞಾನಿ ಡಾ. ರಮೇಶ್ ಅವರು ಕೃತಕ ಬುದ್ಧಿಮತ್ತೆಯ ಭವಿಷ್ಯದ ಬಗ್ಗೆ ಮಾತನಾಡಿದರು. ಅವರ ಭಾಷಣವು ಸಭಿಕರನ್ನು ಮಂತ್ರಮುಗ್ಧರನ್ನಾಗಿಸಿತು. ಅವರು ನವೀನ ತಂತ್ರಜ್ಞಾನಗಳ ಪ್ರಾಮುಖ್ಯತೆಯನ್ನು ಒತ್ತಿ ಹೇಳಿದರು.";
-    setInputText(exampleText);
+    const exampleHeadline = "ತಂತ್ರಜ್ಞಾನ ಶೃಂಗಸಭೆಯಲ್ಲಿ ಕೃತಕ ಬುದ್ಧಿಮತ್ತೆ ಚರ್ಚೆ";
+    const exampleBody = "ಬೆಂಗಳೂರಿನಲ್ಲಿ ನಡೆದ ತಂತ್ರಜ್ಞಾನ ಶೃಂಗಸಭೆಯಲ್ಲಿ, ಪ್ರಖ್ಯಾತ ವಿಜ್ಞಾನಿ ಡಾ. ರಮೇಶ್ ಅವರು ಕೃತಕ ಬುದ್ಧಿಮತ್ತೆಯ ಭವಿಷ್ಯದ ಬಗ್ಗೆ ಮಾತನಾಡಿದರು. ಅವರ ಭಾಷಣವು ಸಭಿಕರನ್ನು ಮಂತ್ರಮುಗ್ಧರನ್ನಾಗಿಸಿತು. ಅವರು ನವೀನ ತಂತ್ರಜ್ಞಾನಗಳ ಪ್ರಾಮುಖ್ಯತೆಯನ್ನು ಒತ್ತಿ ಹೇಳಿದರು.";
+    setOriginalHeadline(exampleHeadline);
+    setInputBody(exampleBody);
     resetOutputs();
   };
 
@@ -127,10 +152,19 @@ const App: React.FC = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
             {/* Column 1: Input */}
-            <div className="flex flex-col">
-               <div className="flex flex-col space-y-4 h-full">
+            <div className="flex flex-col space-y-6">
+               <div className="flex flex-col space-y-4">
+                  <h2 className="text-xl font-semibold text-teal-700">Original News Headline</h2>
+                  <InputText
+                    value={originalHeadline}
+                    onChange={(e) => setOriginalHeadline(e.target.value)}
+                    placeholder="ನಿಮ್ಮ ಸುದ್ದಿ ಶೀರ್ಷಿಕೆಯನ್ನು ಇಲ್ಲಿ ನಮೂದಿಸಿ..."
+                    disabled={isLoading}
+                  />
+               </div>
+               <div className="flex flex-col space-y-4">
                  <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-semibold text-teal-700">Original Text</h2>
+                    <h2 className="text-xl font-semibold text-teal-700">Original News Body</h2>
                      <button 
                       onClick={handleExample}
                       className="text-sm text-teal-600 hover:text-teal-800 font-medium transition-colors"
@@ -139,8 +173,8 @@ const App: React.FC = () => {
                     </button>
                   </div>
                   <InputTextArea
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
+                    value={inputBody}
+                    onChange={(e) => setInputBody(e.target.value)}
                     placeholder="ನಿಮ್ಮ ಕನ್ನಡ ಪಠ್ಯವನ್ನು ಇಲ್ಲಿ ನಮೂದಿಸಿ..."
                     disabled={isLoading}
                   />
@@ -153,7 +187,7 @@ const App: React.FC = () => {
                     <h2 className="text-xl font-semibold text-cyan-700">Suggested Headlines</h2>
                     <HeadlineDisplay
                         headlines={headlines}
-                        isLoading={isLoading && !!rewrittenText && !headlines}
+                        isLoading={isLoading && !!inputBody.trim() && !headlines}
                         error={headlineError}
                     />
                 </div>
@@ -161,7 +195,7 @@ const App: React.FC = () => {
                     <h2 className="text-xl font-semibold text-green-700">Suggested Rewrite</h2>
                     <RewrittenTextDisplay
                         rewrittenText={rewrittenText}
-                        isLoading={isLoading && !!correctionData && !rewrittenText}
+                        isLoading={isLoading && !!correctedBodyData && !rewrittenText}
                         error={rewriteError}
                     />
                 </div>
@@ -174,11 +208,19 @@ const App: React.FC = () => {
                     />
                 </div>
                 <div className="flex flex-col space-y-4">
-                    <h2 className="text-xl font-semibold text-emerald-700">Corrected Text</h2>
+                    <h2 className="text-xl font-semibold text-emerald-700">Corrected Headline</h2>
                     <OutputDisplay
-                        correctionData={correctionData}
-                        isLoading={isLoading && !correctionData}
-                        error={error}
+                        correctionData={correctedHeadlineData}
+                        isLoading={isLoading && !!originalHeadline.trim() && !correctedHeadlineData && !correctedHeadlineError}
+                        error={correctedHeadlineError}
+                    />
+                </div>
+                <div className="flex flex-col space-y-4">
+                    <h2 className="text-xl font-semibold text-emerald-700">Corrected Body</h2>
+                    <OutputDisplay
+                        correctionData={correctedBodyData}
+                        isLoading={isLoading && !!inputBody.trim() && !correctedBodyData && !correctedBodyError}
+                        error={correctedBodyError}
                     />
                 </div>
             </div>
@@ -188,18 +230,18 @@ const App: React.FC = () => {
             <SubmitButton
               onClick={handleSubmit}
               isLoading={isLoading}
-              disabled={!inputText.trim() || isLoading}
+              disabled={(!originalHeadline.trim() && !inputBody.trim()) || isLoading}
             >
               Process Text
             </SubmitButton>
-            {error && !isLoading && !correctionData && (
-              <p className="text-red-500 mt-4 text-center">{error}</p>
+            {correctedBodyError && !isLoading && !correctedBodyData && !correctedHeadlineData && (
+              <p className="text-red-500 mt-4 text-center">{correctedBodyError}</p>
             )}
           </div>
         </div>
         <footer className="text-center mt-8 space-y-1">
           <p className="text-gray-500 text-sm">© 2025. PublicNext</p>
-          <p className="text-gray-500 text-xs">Version 1.0.1</p>
+          <p className="text-gray-500 text-xs">Version 1.0.2</p>
         </footer>
       </main>
     </div>
