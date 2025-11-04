@@ -1,4 +1,6 @@
+
 import React, { useState } from 'react';
+import { CopyIcon, CheckIcon, LightBulbIcon } from './Icons';
 
 interface HeadlineDisplayProps {
   headlines: string[] | null;
@@ -7,29 +9,11 @@ interface HeadlineDisplayProps {
 }
 
 const LoadingSkeleton: React.FC = () => (
-  <div className="animate-pulse w-full space-y-3 p-2">
-    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-    <div className="h-4 bg-gray-200 rounded w-4/6"></div>
-    <div className="h-4 bg-gray-200 rounded w-full"></div>
+  <div className="animate-pulse w-full space-y-4 p-4">
+    <div className="h-5 bg-gray-200 rounded w-5/6"></div>
+    <div className="h-5 bg-gray-200 rounded w-4/6"></div>
+    <div className="h-5 bg-gray-200 rounded w-full"></div>
   </div>
-);
-
-const headlineTypes = [
-    { title: 'Option 1', color: 'bg-teal-100 text-teal-800' },
-    { title: 'Option 2', color: 'bg-cyan-100 text-cyan-800' },
-    { title: 'Option 3', color: 'bg-emerald-100 text-emerald-800' },
-];
-
-const CopyIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-    </svg>
-);
-
-const CheckIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-    </svg>
 );
 
 export const HeadlineDisplay: React.FC<HeadlineDisplayProps> = ({ headlines, isLoading, error }) => {
@@ -46,40 +30,50 @@ export const HeadlineDisplay: React.FC<HeadlineDisplayProps> = ({ headlines, isL
   };
 
   return (
-    <div className="w-full min-h-[72px] p-4 border border-gray-300 rounded-xl shadow-sm bg-cyan-50/50 relative flex items-center justify-center">
-      {isLoading && <LoadingSkeleton />}
-      {!isLoading && !error && !headlines && (
-        <p className="text-gray-500 text-center">Catchy headlines will appear here.</p>
-      )}
-      {!isLoading && error && (
-        <p className="text-red-500 text-center">{error}</p>
-      )}
-      {!isLoading && headlines && headlines.length > 0 && (
-        <div className="w-full space-y-3">
-          {headlines.map((headline, index) => (
-             <div key={index} className="flex items-center space-x-3">
-                <span className={`text-xs font-semibold px-2 py-1 rounded-full ${headlineTypes[index]?.color || 'bg-gray-100 text-gray-800'}`}>
-                    {headlineTypes[index]?.title || `Option ${index + 1}`}
-                </span>
-                <p className="flex-1 font-semibold text-cyan-900 text-sm md:text-base">
-                    {headline}
-                </p>
-                <button
-                    onClick={() => handleCopy(headline, index)}
-                    className={`p-1.5 rounded-md transition-all duration-200 ${
-                        copiedIndex === index
-                        ? 'bg-green-500 text-white'
-                        : 'bg-gray-200 text-gray-500 hover:bg-gray-300'
-                    }`}
-                    aria-label={copiedIndex === index ? 'Copied' : `Copy headline ${index + 1}`}
-                    title={copiedIndex === index ? 'Copied!' : 'Copy'}
-                >
-                    {copiedIndex === index ? <CheckIcon /> : <CopyIcon />}
-                </button>
-             </div>
-          ))}
+    <div className="w-full bg-white/50 border border-cyan-200/80 rounded-xl shadow-sm overflow-hidden">
+        <div className="flex items-center p-4 bg-cyan-50/70 border-b border-cyan-200/80">
+            <LightBulbIcon className="h-6 w-6 text-cyan-600"/>
+            <h2 className="text-lg font-semibold text-gray-700 ml-3">Suggested Headlines</h2>
         </div>
-      )}
+        <div className="p-4 min-h-[150px]">
+            {isLoading && <LoadingSkeleton />}
+            {!isLoading && !error && !headlines && (
+              <div className="flex items-center justify-center h-full min-h-[120px]">
+                <p className="text-gray-500 text-center">Engaging headlines will appear here.</p>
+              </div>
+            )}
+            {!isLoading && error && (
+              <div className="flex items-center justify-center h-full min-h-[120px]">
+                <p className="text-red-500 text-center">{error}</p>
+              </div>
+            )}
+            {!isLoading && headlines && headlines.length > 0 && (
+              <ul className="w-full space-y-3">
+                {headlines.map((headline, index) => (
+                   <li key={index} className="flex items-center space-x-3 p-3 bg-cyan-50/50 rounded-lg border border-cyan-200/60">
+                      <span className="flex-shrink-0 text-sm font-bold text-cyan-700 bg-cyan-100/80 h-6 w-6 flex items-center justify-center rounded-full">
+                          {index + 1}
+                      </span>
+                      <p className="flex-1 font-medium text-cyan-900 text-sm md:text-base">
+                          {headline}
+                      </p>
+                      <button
+                          onClick={() => handleCopy(headline, index)}
+                          className={`p-2 rounded-full transition-all duration-200 ${
+                              copiedIndex === index
+                              ? 'bg-green-100 text-green-600'
+                              : 'bg-gray-200/80 text-gray-500 hover:bg-gray-300/80'
+                          }`}
+                          aria-label={copiedIndex === index ? 'Copied' : `Copy headline ${index + 1}`}
+                          title={copiedIndex === index ? 'Copied!' : 'Copy'}
+                      >
+                          {copiedIndex === index ? <CheckIcon className="h-4 w-4" /> : <CopyIcon className="h-4 w-4" />}
+                      </button>
+                   </li>
+                ))}
+              </ul>
+            )}
+        </div>
     </div>
   );
 };

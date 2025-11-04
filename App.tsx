@@ -12,6 +12,8 @@ import { LoginPage } from './components/LoginPage';
 import { SecretKeyModal } from './components/ApiKeyModal';
 import { correctKannadaSpelling, rewriteKannadaText, generateKannadaHeadline, generateKeywords } from './services/geminiService';
 import type { CorrectionResponse, KeywordsResponse } from './types';
+import { NewspaperIcon, PencilIcon, SparklesIcon, LightBulbIcon, TagIcon, CheckBadgeIcon } from './components/Icons';
+
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -145,103 +147,101 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-teal-50 to-green-50 text-gray-800">
       <Header onClearSecretKey={handleClearSecretKey} />
       <main className="container mx-auto p-4 md:p-8">
-        <div className="max-w-screen-xl mx-auto bg-white/60 backdrop-blur-sm rounded-2xl shadow-lg p-6 md:p-10 border border-gray-200">
-          <p className="text-center text-gray-600 mb-8 text-base md:text-lg max-w-4xl mx-auto">
-            Enter news content, and our AI will correct, rewrite, and suggest headlines.
-          </p>
+        <div className="max-w-screen-xl mx-auto bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg p-6 md:p-10 border border-gray-200/50">
+          <div className="text-center mb-10">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-800">Curation Studio</h1>
+              <p className="text-gray-600 mt-2 text-base md:text-lg max-w-4xl mx-auto">
+                Enter news headline and content, and get corrected, rewritten, and suggested engaging headlines.
+              </p>
+          </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10">
             {/* Column 1: Input */}
-            <div className="flex flex-col space-y-6">
-               <div className="flex flex-col space-y-4">
-                  <h2 className="text-xl font-semibold text-teal-700">Original News Headline</h2>
-                  <InputText
-                    value={originalHeadline}
-                    onChange={(e) => setOriginalHeadline(e.target.value)}
-                    placeholder="ನಿಮ್ಮ ಸುದ್ದಿ ಶೀರ್ಷಿಕೆಯನ್ನು ಇಲ್ಲಿ ನಮೂದಿಸಿ..."
-                    disabled={isLoading}
-                  />
-               </div>
-               <div className="flex flex-col space-y-4">
-                 <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-semibold text-teal-700">Original News Body</h2>
-                     <button 
-                      onClick={handleExample}
-                      className="text-sm text-teal-600 hover:text-teal-800 font-medium transition-colors"
-                      >
-                      Load Example
-                    </button>
+            <div className="flex flex-col space-y-8">
+               <div className="bg-white/50 border border-gray-200/80 rounded-xl shadow-sm p-6">
+                  <div className="flex items-center mb-4">
+                      <NewspaperIcon className="h-6 w-6 text-teal-600" />
+                      <h2 className="text-xl font-semibold text-gray-700 ml-3">Original News Content</h2>
                   </div>
-                  <InputTextArea
-                    value={inputBody}
-                    onChange={(e) => setInputBody(e.target.value)}
-                    placeholder="ನಿಮ್ಮ ಕನ್ನಡ ಪಠ್ಯವನ್ನು ಇಲ್ಲಿ ನಮೂದಿಸಿ..."
-                    disabled={isLoading}
-                  />
+                  <div className="flex flex-col space-y-4">
+                      <InputText
+                        value={originalHeadline}
+                        onChange={(e) => setOriginalHeadline(e.target.value)}
+                        placeholder="Enter headline here (ಶೀರ್ಷಿಕೆ)..."
+                        disabled={isLoading}
+                        aria-label="Original News Headline"
+                      />
+                       <div className="flex justify-end items-center -mt-2 mb-2">
+                         <button 
+                          onClick={handleExample}
+                          className="flex items-center text-sm text-teal-600 hover:text-teal-800 font-medium transition-colors disabled:opacity-50"
+                          disabled={isLoading}
+                          >
+                          <SparklesIcon className="h-4 w-4 mr-1.5" />
+                          Load Example
+                        </button>
+                      </div>
+                      <InputTextArea
+                        value={inputBody}
+                        onChange={(e) => setInputBody(e.target.value)}
+                        placeholder="Enter body text here (ಸುದ್ದಿ)..."
+                        disabled={isLoading}
+                        aria-label="Original News Body"
+                      />
+                  </div>
                </div>
             </div>
 
             {/* Column 2: Outputs */}
-            <div className="flex flex-col space-y-6">
-                 <div className="flex flex-col space-y-4">
-                    <h2 className="text-xl font-semibold text-cyan-700">Suggested Headlines</h2>
-                    <HeadlineDisplay
-                        headlines={headlines}
-                        isLoading={isLoading && !!inputBody.trim() && !headlines}
-                        error={headlineError}
-                    />
-                </div>
-                 <div className="flex flex-col space-y-4">
-                    <h2 className="text-xl font-semibold text-green-700">Suggested Rewrite</h2>
-                    <RewrittenTextDisplay
-                        rewrittenText={rewrittenText}
-                        isLoading={isLoading && !!correctedBodyData && !rewrittenText}
-                        error={rewriteError}
-                    />
-                </div>
-                 <div className="flex flex-col space-y-4">
-                    <h2 className="text-xl font-semibold text-indigo-700">SEO Keywords</h2>
-                    <KeywordDisplay
-                        keywords={keywords}
-                        isLoading={isLoading && !!rewrittenText && !keywords}
-                        error={keywordsError}
-                    />
-                </div>
-                <div className="flex flex-col space-y-4">
-                    <h2 className="text-xl font-semibold text-emerald-700">Corrected Headline</h2>
-                    <OutputDisplay
-                        correctionData={correctedHeadlineData}
-                        isLoading={isLoading && !!originalHeadline.trim() && !correctedHeadlineData && !correctedHeadlineError}
-                        error={correctedHeadlineError}
-                    />
-                </div>
-                <div className="flex flex-col space-y-4">
-                    <h2 className="text-xl font-semibold text-emerald-700">Corrected Body</h2>
-                    <OutputDisplay
-                        correctionData={correctedBodyData}
-                        isLoading={isLoading && !!inputBody.trim() && !correctedBodyData && !correctedBodyError}
-                        error={correctedBodyError}
-                    />
-                </div>
+            <div className="flex flex-col space-y-8">
+              <HeadlineDisplay
+                headlines={headlines}
+                isLoading={isLoading && !!inputBody.trim() && !headlines}
+                error={headlineError}
+              />
+              <RewrittenTextDisplay
+                  rewrittenText={rewrittenText}
+                  isLoading={isLoading && !!correctedBodyData && !rewrittenText}
+                  error={rewriteError}
+              />
+               <KeywordDisplay
+                  keywords={keywords}
+                  isLoading={isLoading && !!rewrittenText && !keywords}
+                  error={keywordsError}
+              />
+               <OutputDisplay
+                  title="Corrected Headline"
+                  icon={<CheckBadgeIcon className="h-6 w-6 text-emerald-600" />}
+                  correctionData={correctedHeadlineData}
+                  isLoading={isLoading && !!originalHeadline.trim() && !correctedHeadlineData && !correctedHeadlineError}
+                  error={correctedHeadlineError}
+              />
+              <OutputDisplay
+                  title="Corrected Body"
+                  icon={<CheckBadgeIcon className="h-6 w-6 text-emerald-600" />}
+                  correctionData={correctedBodyData}
+                  isLoading={isLoading && !!inputBody.trim() && !correctedBodyData && !correctedBodyError}
+                  error={correctedBodyError}
+              />
             </div>
           </div>
 
-          <div className="mt-8 flex flex-col items-center">
+          <div className="mt-10 flex flex-col items-center">
             <SubmitButton
               onClick={handleSubmit}
               isLoading={isLoading}
               disabled={(!originalHeadline.trim() && !inputBody.trim()) || isLoading}
             >
-              Process Text
+              Process Content
             </SubmitButton>
             {correctedBodyError && !isLoading && !correctedBodyData && !correctedHeadlineData && (
-              <p className="text-red-500 mt-4 text-center">{correctedBodyError}</p>
+              <p className="text-red-600 mt-4 text-center">{correctedBodyError}</p>
             )}
           </div>
         </div>
-        <footer className="text-center mt-8 space-y-1">
-          <p className="text-gray-500 text-sm">© 2025. PublicNext</p>
-          <p className="text-gray-500 text-xs">Version 1.0.2</p>
+        <footer className="text-center mt-10 space-y-1">
+          <p className="text-gray-500 text-sm">© 2025 PublicNext</p>
+          <p className="text-gray-400 text-xs">Version 1.0.3</p>
         </footer>
       </main>
     </div>

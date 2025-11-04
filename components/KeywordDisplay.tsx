@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import type { KeywordsResponse } from '../types';
+import { CopyIcon, CheckIcon, TagIcon } from './Icons';
 
 interface KeywordDisplayProps {
   keywords: KeywordsResponse | null;
@@ -8,31 +9,19 @@ interface KeywordDisplayProps {
   error: string | null;
 }
 
-const CopyIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-    </svg>
-);
-
-const CheckIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-    </svg>
-);
-
 const LoadingSkeleton: React.FC = () => (
-  <div className="animate-pulse space-y-4 p-2">
-    <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+  <div className="animate-pulse space-y-4 p-4">
+    <div className="h-4 bg-gray-200 rounded w-1/4 mb-3"></div>
     <div className="flex flex-wrap gap-2">
-        <div className="h-6 bg-gray-200 rounded-full w-20"></div>
-        <div className="h-6 bg-gray-200 rounded-full w-24"></div>
-        <div className="h-6 bg-gray-200 rounded-full w-16"></div>
+        <div className="h-7 bg-gray-200 rounded-full w-20"></div>
+        <div className="h-7 bg-gray-200 rounded-full w-24"></div>
+        <div className="h-7 bg-gray-200 rounded-full w-16"></div>
     </div>
-    <div className="h-4 bg-gray-200 rounded w-1/3 mt-4"></div>
+    <div className="h-4 bg-gray-200 rounded w-1/3 mt-4 mb-3"></div>
     <div className="flex flex-wrap gap-2">
-        <div className="h-6 bg-gray-200 rounded-full w-32"></div>
-        <div className="h-6 bg-gray-200 rounded-full w-40"></div>
-        <div className="h-6 bg-gray-200 rounded-full w-28"></div>
+        <div className="h-7 bg-gray-200 rounded-full w-32"></div>
+        <div className="h-7 bg-gray-200 rounded-full w-40"></div>
+        <div className="h-7 bg-gray-200 rounded-full w-28"></div>
     </div>
   </div>
 );
@@ -59,53 +48,60 @@ export const KeywordDisplay: React.FC<KeywordDisplayProps> = ({ keywords, isLoad
     };
 
     return (
-        <div className="w-full min-h-[180px] p-4 border border-gray-300 rounded-xl shadow-sm bg-indigo-50/50 relative">
-            {isLoading && <LoadingSkeleton />}
-            {!isLoading && !error && !keywords && (
-                <div className="flex items-center justify-center h-full">
-                    <p className="text-gray-500 text-center">SEO keywords will appear here.</p>
+        <div className="w-full bg-white/50 border border-indigo-200/80 rounded-xl shadow-sm overflow-hidden">
+             <div className="flex items-center justify-between p-4 bg-indigo-50/70 border-b border-indigo-200/80">
+                <div className="flex items-center">
+                    <TagIcon className="h-6 w-6 text-indigo-600" />
+                    <h2 className="text-lg font-semibold text-gray-700 ml-3">SEO Keywords</h2>
                 </div>
-            )}
-            {!isLoading && error && (
-                <div className="flex items-center justify-center h-full">
-                    <p className="text-red-500 text-center">{error}</p>
-                </div>
-            )}
-            {!isLoading && keywords && (
-                <>
+                 {keywords && !isLoading && (
                     <button
                         onClick={handleCopy}
-                        className={`absolute top-2 right-2 p-1.5 rounded-md transition-all duration-200 text-xs flex items-center ${
+                        className={`p-2 rounded-full transition-all duration-200 ${
                             isCopied
-                            ? 'bg-green-500 text-white'
-                            : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                            ? 'bg-green-100 text-green-600'
+                            : 'bg-gray-200/80 text-gray-600 hover:bg-gray-300/80'
                         }`}
                         aria-label="Copy all keywords"
                         title="Copy all keywords"
                     >
-                        {isCopied ? <CheckIcon /> : <CopyIcon />}
-                        <span className="ml-1.5">{isCopied ? 'Copied' : 'Copy All'}</span>
+                        {isCopied ? <CheckIcon className="h-5 w-5" /> : <CopyIcon className="h-5 w-5" />}
                     </button>
-                    <div className="space-y-4 pr-16">
+                 )}
+            </div>
+            <div className="p-4 min-h-[180px]">
+                {isLoading && <LoadingSkeleton />}
+                {!isLoading && !error && !keywords && (
+                    <div className="flex items-center justify-center h-full min-h-[150px]">
+                        <p className="text-gray-500 text-center">SEO keywords will appear here.</p>
+                    </div>
+                )}
+                {!isLoading && error && (
+                    <div className="flex items-center justify-center h-full min-h-[150px]">
+                        <p className="text-red-500 text-center">{error}</p>
+                    </div>
+                )}
+                {!isLoading && keywords && (
+                    <div className="space-y-4">
                         <div>
-                            <h4 className="font-semibold text-indigo-800 mb-2">Short-tail Keywords</h4>
+                            <h4 className="font-semibold text-indigo-800 mb-2 text-sm">Short-tail Keywords</h4>
                             <div className="flex flex-wrap gap-2">
                                 {keywords.shortTailKeywords.map((kw, i) => (
-                                    <span key={i} className="px-3 py-1 bg-indigo-100 text-indigo-800 text-sm font-medium rounded-full">{kw}</span>
+                                    <span key={i} className="px-3 py-1 bg-indigo-100 text-indigo-800 text-sm font-medium rounded-full border border-indigo-200/80">{kw}</span>
                                 ))}
                             </div>
                         </div>
                         <div>
-                            <h4 className="font-semibold text-purple-800 mb-2">Long-tail Keywords</h4>
+                            <h4 className="font-semibold text-purple-800 mb-2 text-sm">Long-tail Keywords</h4>
                             <div className="flex flex-wrap gap-2">
                                 {keywords.longTailKeywords.map((kw, i) => (
-                                    <span key={i} className="px-3 py-1 bg-purple-100 text-purple-800 text-sm font-medium rounded-full">{kw}</span>
+                                    <span key={i} className="px-3 py-1 bg-purple-100 text-purple-800 text-sm font-medium rounded-full border border-purple-200/80">{kw}</span>
                                 ))}
                             </div>
                         </div>
                     </div>
-                </>
-            )}
+                )}
+            </div>
         </div>
     );
 };

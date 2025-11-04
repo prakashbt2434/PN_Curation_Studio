@@ -18,7 +18,7 @@ export const InputTextArea: React.FC<InputTextAreaProps> = ({
       onChange={onChange}
       placeholder={placeholder}
       disabled={disabled}
-      className="w-full h-full min-h-[576px] p-4 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow duration-200 resize-none text-lg leading-relaxed bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+      className="w-full h-full min-h-[400px] p-4 border border-gray-300/80 rounded-xl shadow-sm focus:ring-2 focus:ring-teal-400 focus:border-teal-500 transition-all duration-200 resize-none text-base md:text-lg leading-relaxed bg-white/80 disabled:bg-gray-100/80 disabled:cursor-not-allowed placeholder-gray-400"
       {...rest}
     />
   );
